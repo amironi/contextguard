@@ -1,0 +1,19 @@
+{
+  "maxToolCallsPerMinute": 30,
+  "blockedPatterns": [
+    "ignore previous instructions",
+    "system prompt",
+    "confidential"
+  ],
+  "allowedFilePaths": [
+    "/var/app/data",
+    "/home/user/safe-directory"
+  ],
+  "alertThreshold": 5,
+  "enablePromptInjectionDetection": true,
+  "enableSensitiveDataDetection": true,
+  "enablePathTraversalPrevention": true,
+  "enableRateLimiting": true,
+  "logLevel": "debug",
+  "logPath": "/tmp/mcp_security.log"
+}

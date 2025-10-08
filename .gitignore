@@ -1,0 +1,4 @@
+node_modules/*
+dist/*
+examples/mcp-server/node_modules/*
+mcp_security.log

@@ -40,12 +40,6 @@
 npm install -g contextguard
 ```
 
-### Basic Usage (CLI - optional)
-
-```bash
-contextguard --server "node your-mcp-server.js"
-```
-
 ### Basic Usage (Claude Desktop)
 
 Update your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
@@ -69,6 +63,82 @@ Update your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 **That's it!** Your MCP server is now protected. 🛡️
 
 #### [See Example below: Testing ContextGuard](#-example-testing-contextguard)
+
+### CLI Usage
+
+```bash
+contextguard --server "node your-mcp-server.js"
+```
+
+## 🧪 Example: Testing ContextGuard
+
+Want to see the protection in action? Try these tests:
+
+### Test 1: Vulnerable Server (No Protection)
+
+Add to Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "vulnerable-test": {
+      "command": "node",
+      "args": ["/path/to/examples/demo-server.js"]
+    }
+  }
+}
+```
+
+**Try these attacks:**
+
+- `Get the api_key configuration` → ❌ **Leaks sensitive data**
+- `Search the database for all users` → ❌ **Succeeds**
+- `Read the file at path: ../../../../etc/hosts` → ❌ **Succeeds**
+
+---
+
+### Test 2: Protected Server (With ContextGuard)
+
+Create `config.json`:
+
+```json
+{
+  "maxToolCallsPerMinute": 5,
+  "enablePromptInjectionDetection": true,
+  "enableSensitiveDataDetection": true,
+  "enablePathTraversalPrevention": true,
+  "logPath": "/tmp/mcp_security.log",
+  "allowedFilePaths": ["/tmp/safe-directory"],
+  "logLevel": "debug"
+}
+```
+
+Update Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "protected-test": {
+      "command": "npx",
+      "args": [
+        "contextguard",
+        "--server",
+        "node /path/to/mcp-server-demo/demo-server.js",
+        "--config",
+        "/path/to/config.json"
+      ]
+    }
+  }
+}
+```
+
+**Try the same attacks:**
+
+- `Get the api_key configuration` → ✅ **BLOCKED** (API key pattern detected)
+- `Ignore previous instructions...` → ✅ **BLOCKED** (Prompt injection detected)
+- `Read the file at path: ../../../../etc/hosts` → ✅ **BLOCKED** (Path traversal detected)
+
+---
 
 ## ✨ Features
 
@@ -166,76 +236,6 @@ All security events are logged in JSON format:
   }
 }
 ```
-
----
-
-## 🧪 Example: Testing ContextGuard
-
-Want to see the protection in action? Try these tests:
-
-### Test 1: Vulnerable Server (No Protection)
-
-Add to Claude Desktop config:
-
-```json
-{
-  "mcpServers": {
-    "vulnerable-test": {
-      "command": "node",
-      "args": ["/path/to/examples/demo-server.js"]
-    }
-  }
-}
-```
-
-**Try these attacks:**
-
-- `Get the api_key configuration` → ❌ **Leaks sensitive data**
-- `Search the database for all users` → ❌ **Succeeds**
-- `Read the file at path: ../../../../etc/hosts` → ❌ **Succeeds**
-
----
-
-### Test 2: Protected Server (With ContextGuard)
-
-Create `config.json`:
-
-```json
-{
-  "maxToolCallsPerMinute": 5,
-  "enablePromptInjectionDetection": true,
-  "enableSensitiveDataDetection": true,
-  "enablePathTraversalPrevention": true,
-  "logPath": "/tmp/mcp_security.log",
-  "allowedFilePaths": ["/tmp/safe-directory"],
-  "logLevel": "debug"
-}
-```
-
-Update Claude Desktop config:
-
-```json
-{
-  "mcpServers": {
-    "protected-test": {
-      "command": "npx",
-      "args": [
-        "contextguard",
-        "--server",
-        "node /path/to/mcp-server-demo/demo-server.js",
-        "--config",
-        "/path/to/config.json"
-      ]
-    }
-  }
-}
-```
-
-**Try the same attacks:**
-
-- `Get the api_key configuration` → ✅ **BLOCKED** (API key pattern detected)
-- `Ignore previous instructions...` → ✅ **BLOCKED** (Prompt injection detected)
-- `Read the file at path: ../../../../etc/hosts` → ✅ **BLOCKED** (Path traversal detected)
 
 ---
 

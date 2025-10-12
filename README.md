@@ -16,7 +16,7 @@
 
 ![ContextGuard Demo](./assets/demo.gif)
 
-[▶️ Watch Full Demo Video](https://example.com/video.mp4)
+<!-- [▶️ Watch Full Demo Video](https://example.com/video.mp4) -->
 
 ---
 

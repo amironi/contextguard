@@ -16,8 +16,6 @@
 
 ![ContextGuard Demo](./assets/demo.gif)
 
-<!-- [▶️ Watch Full Demo Video](https://example.com/video.mp4) -->
-
 ---
 
 ## 🎯 Why ContextGuard?
@@ -321,7 +319,7 @@ We welcome contributions! Here's how to get started:
 ## 📞 Support & Contact
 
 - **Issues & Bug Reports**: [GitHub Issues](https://github.com/amironi/contextguard/issues)
-- **Email**: amir@mironi.co.il
+- **Email**: am5050@gmail.com
 - **Documentation**: [GitHub Wiki](https://github.com/amironi/contextguard/wiki)
 
 ---

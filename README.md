@@ -280,6 +280,58 @@ A: Sophisticated attackers may find new patterns. We continuously update detecti
 
 ---
 
+## ⚠️ Important: Defense in Depth
+
+**ContextGuard is NOT a replacement for proper security configuration.**
+
+### Primary Security Measures (Required):
+
+1. **Principle of Least Privilege**
+
+   - Run with minimal permissions
+   - Don't run as root/admin
+   - Use dedicated service accounts
+
+2. **File System Restrictions**
+
+   ```javascript
+   // GOOD: Restrict to specific directory
+   const allowedPath = "/app/data";
+
+   // BAD: Allow system-wide access
+   const allowedPath = "/";
+   ```
+
+3. **Sandboxing**
+
+   - Use Docker/containers
+   - Implement chroot jails
+   - Enable AppArmor/SELinux
+
+4. **Input Validation**
+   - Validate at application layer
+   - Whitelist allowed operations
+   - Reject malformed requests
+
+### ContextGuard's Role:
+
+ContextGuard provides **defense-in-depth** by:
+
+- Detecting attacks that bypass primary defenses
+- Catching misconfigurations before exploitation
+- Logging suspicious patterns for audit
+- Alerting on anomalies
+
+Think of it like a firewall: essential protection, but not your only protection.
+
+### Further Reading:
+
+- [MCP Security Best Practices](https://modelcontextprotocol.io/docs/security)
+- [OWASP Secure Configuration Guide](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/)
+- [Container Security Best Practices](https://docs.docker.com/engine/security/)
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Here's how to get started:
@@ -319,7 +371,7 @@ We welcome contributions! Here's how to get started:
 ## 📞 Support & Contact
 
 - **Issues & Bug Reports**: [GitHub Issues](https://github.com/amironi/contextguard/issues)
-- **Email**: am5050@gmail.com
+- **Email**: info@contextguard.dev
 - **Documentation**: [GitHub Wiki](https://github.com/amironi/contextguard/wiki)
 
 ---

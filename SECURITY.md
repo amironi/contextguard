@@ -57,7 +57,7 @@ ContextGuard is a defense-in-depth tool and should not be your only security mea
 
 ### How to Report
 
-1. **Email**: Send details to [am5050@gmail.com](mailto:am5050@gmail.com)
+1. **Email**: Send details to [info@contextguard.dev](mailto:info@contextguard.dev)
    - Subject: "SECURITY: [Brief Description]"
 2. **Include**:
 
@@ -231,7 +231,7 @@ contextguard --server "node server.js"
 
 ## Contact
 
-- **Security Issues**: [am5050@gmail.com](mailto:am5050@gmail.com)
+- **Security Issues**: [info@contextguard.dev](mailto:info@contextguard.dev)
 - **General Questions**: [GitHub Issues](https://github.com/amironi/contextguard/issues)
 - **PGP Key**: Coming soon
 

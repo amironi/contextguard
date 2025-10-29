@@ -519,7 +519,7 @@ Contributors who make significant improvements will be:
 
 - **Questions?** Open a GitHub Discussion
 - **Stuck?** Ask in Discord (coming soon)
-- **Security concern?** Email am5050@gmail.com
+- **Security concern?** Email info@contextguard.dev
 
 ---
 

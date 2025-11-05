@@ -12,6 +12,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import fs from "fs/promises";
+import { exit } from "process";
 
 // Create server instance
 const server = new Server(
@@ -224,5 +225,5 @@ async function main() {
 
 main().catch((error) => {
   console.error("Fatal error:", error);
-  process.exit(1);
+  exit(1);
 });

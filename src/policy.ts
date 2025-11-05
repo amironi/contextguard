@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CgPolicyType } from "./types/types";
+import { AgentPolicy } from "./types/types";
 
 /**
  * Initialize patterns for detecting sensitive data
@@ -57,7 +57,7 @@ export interface PolicyChecker {
  * @returns Policy checker functions
  */
 export const createPolicyChecker = (
-  config: Required<CgPolicyType>
+  config: Required<AgentPolicy>
 ): PolicyChecker => {
   const sensitiveDataPatterns = initSensitiveDataPatterns();
   const promptInjectionPatterns = initPromptInjectionPatterns();
@@ -162,7 +162,7 @@ export const createPolicyChecker = (
   };
 };
 
-export const DEFAULT_POLICY: Required<CgPolicyType> = {
+export const DEFAULT_POLICY: Required<AgentPolicy> = {
   maxToolCallsPerMinute: 30,
   blockedPatterns: [],
   allowedFilePaths: [],

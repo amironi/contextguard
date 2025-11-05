@@ -6,36 +6,9 @@
  */
 
 /**
- * Security configuration options for the MCP wrapper
+ * Re-export AgentPolicy from database types
  */
-export interface CgPolicyType {
-  /** Maximum number of tool calls allowed per minute (default: 30) */
-  maxToolCallsPerMinute?: number;
-
-  /** Patterns to block in tool calls */
-  blockedPatterns?: string[];
-
-  /** Allowed file paths for file operations (empty = all allowed) */
-  allowedFilePaths?: string[];
-
-  /** Number of violations before triggering alerts (default: 5) */
-  alertThreshold?: number;
-
-  /** Enable prompt injection detection (default: true) */
-  enablePromptInjectionDetection?: boolean;
-
-  /** Enable sensitive data detection (default: true) */
-  enableSensitiveDataDetection?: boolean;
-
-  /** Path to security log file */
-  logPath?: string;
-
-  /** Enable pro features (requires license) */
-  enableProFeatures?: boolean;
-
-  /** License file path for pro features */
-  licenseFilePath?: string;
-}
+export type { AgentPolicy } from "./database.types";
 
 /**
  * Security event severity levels

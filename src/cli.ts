@@ -8,7 +8,7 @@
  */
 
 import * as fs from "fs";
-import { CgPolicyType } from "./types/types";
+import { AgentPolicy } from "./types/types";
 import { createAgent } from "./agent";
 import { SupabaseConfig } from "./lib/supabase-client";
 
@@ -71,7 +71,7 @@ function parseArgs(): { serverCommand: string; configFile: string } {
  * @param configFile - Path to config file
  * @returns Security configuration
  */
-function loadConfig(configFile: string): CgPolicyType {
+function loadConfig(configFile: string): AgentPolicy {
   if (!configFile) {
     return {};
   }

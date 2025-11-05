@@ -9,7 +9,7 @@ import { spawn, ChildProcess } from "child_process";
 import { createHash } from "crypto";
 import { createPolicyChecker, DEFAULT_POLICY } from "./policy";
 import { createLogger, Logger } from "./logger";
-import { CgPolicyType, MCPMessage } from "./types/types";
+import { AgentPolicy, MCPMessage } from "./types/types";
 import { createSupabaseClient, SupabaseConfig } from "./lib/supabase-client";
 
 /**
@@ -22,8 +22,8 @@ const generateSessionId = (): string =>
  * Merge policy with defaults
  */
 const mergePolicyWithDefaults = (
-  policy: CgPolicyType
-): Required<CgPolicyType> => ({
+  policy: AgentPolicy
+): Required<AgentPolicy> => ({
   ...DEFAULT_POLICY,
   ...policy,
 });
@@ -55,7 +55,7 @@ interface AgentState {
  */
 export const createAgent = (
   serverCommand: string[],
-  policyConfig: CgPolicyType = {},
+  policyConfig: AgentPolicy = {},
   supabaseConfig?: SupabaseConfig
 ): Agent => {
   const config = mergePolicyWithDefaults(policyConfig);

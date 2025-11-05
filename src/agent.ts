@@ -10,6 +10,7 @@ import { createHash } from "crypto";
 import { createPolicyChecker, DEFAULT_POLICY } from "./policy";
 import { createLogger, Logger } from "./logger";
 import { CgPolicyType, MCPMessage } from "./types";
+import { createSupabaseClient, SupabaseConfig } from "./supabase-client";
 
 /**
  * Generate a unique session ID
@@ -52,15 +53,23 @@ interface AgentState {
  * Create an MCP security agent
  * @param serverCommand - Command to start MCP server
  * @param policyConfig - Policy configuration
+ * @param supabaseConfig - Optional Supabase configuration
  * @returns Agent functions
  */
 export const createAgent = (
   serverCommand: string[],
-  policyConfig: CgPolicyType = {}
+  policyConfig: CgPolicyType = {},
+  supabaseConfig?: SupabaseConfig
 ): Agent => {
   const config = mergePolicyWithDefaults(policyConfig);
   const policy = createPolicyChecker(config);
-  const logger = createLogger(config.logPath);
+  
+  // Create Supabase client if config provided
+  const supabaseClient = supabaseConfig
+    ? createSupabaseClient(supabaseConfig)
+    : undefined;
+  
+  const logger = createLogger(config.logPath, supabaseClient);
   const sessionId = generateSessionId();
 
   const state: AgentState = {
@@ -389,6 +398,28 @@ export const createAgent = (
      * Start the MCP server wrapper
      */
     start: async (): Promise<void> => {
+      // Fetch policy from Supabase if configured
+      if (supabaseClient && supabaseConfig?.agentId) {
+        try {
+          const remotePolicy = await supabaseClient.fetchPolicy(
+            supabaseConfig.agentId
+          );
+          if (remotePolicy) {
+            console.log("✓ Loaded policy from Supabase");
+            // Merge remote policy with local config
+            Object.assign(config, remotePolicy);
+          }
+        } catch (error) {
+          console.warn("⚠ Failed to fetch policy from Supabase:", error);
+        }
+
+        // Update agent status to online
+        await supabaseClient.updateAgentStatus(
+          supabaseConfig.agentId,
+          "online"
+        );
+      }
+
       state.process = spawn(serverCommand[0], serverCommand.slice(1), {
         stdio: ["pipe", "pipe", "pipe"],
       });

@@ -10,6 +10,7 @@
 import * as fs from "fs";
 import { CgPolicyType } from "./types";
 import { createAgent } from "./agent";
+import { SupabaseConfig } from "./supabase-client";
 
 /**
  * Display help message
@@ -114,8 +115,22 @@ export async function main(): Promise<void> {
   // Load configuration
   const config = loadConfig(configFile);
 
+  // Load Supabase configuration from environment
+  const supabaseConfig: SupabaseConfig | undefined =
+    process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY
+      ? {
+          url: process.env.SUPABASE_URL,
+          serviceKey: process.env.SUPABASE_SERVICE_KEY,
+          agentId: process.env.AGENT_ID || "default-agent",
+        }
+      : undefined;
+
+  if (supabaseConfig) {
+    console.log(`✓ Supabase integration enabled (Agent ID: ${supabaseConfig.agentId})`);
+  }
+
   // Create and start agent
-  const agent = createAgent(serverCommand.split(" "), config);
+  const agent = createAgent(serverCommand.split(" "), config, supabaseConfig);
 
   await agent.start();
 }

@@ -7,6 +7,7 @@
 
 import * as fs from "fs";
 import { SecurityEvent, SecuritySeverity, SecurityStatistics } from "./types";
+import { SupabaseClient } from "./supabase-client";
 
 const MAX_STORED_EVENTS = 1000;
 
@@ -45,9 +46,13 @@ const countByField = (
 /**
  * Create a security event logger
  * @param logFile - Path to log file
+ * @param supabaseClient - Optional Supabase client for remote logging
  * @returns Logger functions
  */
-export const createLogger = (logFile: string = "mcp_security.log"): Logger => {
+export const createLogger = (
+  logFile: string = "mcp_security.log",
+  supabaseClient?: SupabaseClient
+): Logger => {
   let events: SecurityEvent[] = [];
 
   return {
@@ -87,6 +92,13 @@ export const createLogger = (logFile: string = "mcp_security.log"): Logger => {
         console.error(
           `[SECURITY ALERT] ${eventType}: ${JSON.stringify(details)}`
         );
+      }
+
+      // Report to Supabase if client is provided
+      if (supabaseClient) {
+        supabaseClient.reportEvent(event).catch((err) => {
+          console.error("Failed to report event to Supabase:", err);
+        });
       }
     },
 

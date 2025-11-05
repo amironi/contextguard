@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CgPolicyType } from "./types";
+import { CgPolicyType } from "./types/types";
 
 /**
  * Initialize patterns for detecting sensitive data
@@ -77,7 +77,10 @@ export const createPolicyChecker = (
         const matches = text.match(pattern);
         if (matches) {
           violations.push(
-            `Potential prompt injection detected: "${matches[0].substring(0, 50)}..."`
+            `Potential prompt injection detected: "${matches[0].substring(
+              0,
+              50
+            )}..."`
           );
         }
       }
@@ -99,7 +102,10 @@ export const createPolicyChecker = (
         const matches = text.match(pattern);
         if (matches) {
           violations.push(
-            `Sensitive data pattern detected (redacted): ${pattern.source.substring(0, 30)}...`
+            `Sensitive data pattern detected (redacted): ${pattern.source.substring(
+              0,
+              30
+            )}...`
           );
         }
       }

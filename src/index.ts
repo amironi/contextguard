@@ -6,7 +6,7 @@
  */
 
 // Core types
-export * from "./types";
+export * from "./types/types";
 
 // Policy
 export { createPolicyChecker, PolicyChecker, DEFAULT_POLICY } from "./policy";
@@ -22,7 +22,7 @@ export {
   createSupabaseClient,
   SupabaseClient,
   SupabaseConfig,
-} from "./supabase-client";
+} from "./lib/supabase-client";
 
 // Database Types
 export type {
@@ -40,7 +40,7 @@ export type {
   SecurityEventUpdate,
   AgentPolicyUpdate,
   AgentStatusUpdate,
-} from "./database.types";
+} from "./types/database.types";
 
 // CLI
 export { main } from "./cli";

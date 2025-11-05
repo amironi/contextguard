@@ -8,9 +8,9 @@
  */
 
 import * as fs from "fs";
-import { CgPolicyType } from "./types";
+import { CgPolicyType } from "./types/types";
 import { createAgent } from "./agent";
-import { SupabaseConfig } from "./supabase-client";
+import { SupabaseConfig } from "./lib/supabase-client";
 
 /**
  * Display help message
@@ -126,7 +126,9 @@ export async function main(): Promise<void> {
       : undefined;
 
   if (supabaseConfig) {
-    console.log(`✓ Supabase integration enabled (Agent ID: ${supabaseConfig.agentId})`);
+    console.log(
+      `✓ Supabase integration enabled (Agent ID: ${supabaseConfig.agentId})`
+    );
   }
 
   // Create and start agent

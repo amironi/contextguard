@@ -6,8 +6,12 @@
  */
 
 import * as fs from "fs";
-import { SecurityEvent, SecuritySeverity, SecurityStatistics } from "./types";
-import { SupabaseClient } from "./supabase-client";
+import {
+  SecurityEvent,
+  SecuritySeverity,
+  SecurityStatistics,
+} from "./types/types";
+import { SupabaseClient } from "./lib/supabase-client";
 
 const MAX_STORED_EVENTS = 1000;
 

@@ -7,13 +7,13 @@
 
 import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient as SupabaseJsClient } from "@supabase/supabase-js";
-import { SecurityEvent } from "./types";
+import { SecurityEvent } from "../types/types";
 import type {
   Database,
   AgentPolicy,
   SecurityEventInsert,
   AgentStatusInsert,
-} from "./database.types";
+} from "../types/database.types";
 
 /**
  * Supabase configuration

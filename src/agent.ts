@@ -9,17 +9,14 @@ import { spawn, ChildProcess } from "child_process";
 import { createHash } from "crypto";
 import { createPolicyChecker, DEFAULT_POLICY } from "./policy";
 import { createLogger, Logger } from "./logger";
-import { CgPolicyType, MCPMessage } from "./types";
-import { createSupabaseClient, SupabaseConfig } from "./supabase-client";
+import { CgPolicyType, MCPMessage } from "./types/types";
+import { createSupabaseClient, SupabaseConfig } from "./lib/supabase-client";
 
 /**
  * Generate a unique session ID
  */
 const generateSessionId = (): string =>
-  createHash("md5")
-    .update(Date.now().toString())
-    .digest("hex")
-    .substring(0, 8);
+  createHash("md5").update(Date.now().toString()).digest("hex").substring(0, 8);
 
 /**
  * Merge policy with defaults
@@ -63,12 +60,12 @@ export const createAgent = (
 ): Agent => {
   const config = mergePolicyWithDefaults(policyConfig);
   const policy = createPolicyChecker(config);
-  
+
   // Create Supabase client if config provided
   const supabaseClient = supabaseConfig
     ? createSupabaseClient(supabaseConfig)
     : undefined;
-  
+
   const logger = createLogger(config.logPath, supabaseClient);
   const sessionId = generateSessionId();
 
@@ -377,12 +374,7 @@ export const createAgent = (
    * Handle process exit
    */
   const handleProcessExit = (code: number | null): void => {
-    logger.logEvent(
-      "SERVER_EXIT",
-      "MEDIUM",
-      { exitCode: code },
-      sessionId
-    );
+    logger.logEvent("SERVER_EXIT", "MEDIUM", { exitCode: code }, sessionId);
 
     console.error("\n=== MCP Security Statistics ===");
     console.error(JSON.stringify(logger.getStatistics(), null, 2));

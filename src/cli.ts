@@ -8,8 +8,8 @@
  */
 
 import * as fs from "fs";
-import { MCPSecurityWrapper } from "./cg-agent";
 import { CgPolicyType } from "./types";
+import { CgAgent } from "./agent";
 
 /**
  * Display help message
@@ -115,7 +115,7 @@ async function main(): Promise<void> {
   const config = loadConfig(configFile);
 
   // Create and start wrapper
-  const wrapper = new MCPSecurityWrapper(serverCommand.split(" "), config);
+  const wrapper = new CgAgent(serverCommand.split(" "), config);
 
   await wrapper.start();
 }

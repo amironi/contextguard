@@ -7,13 +7,13 @@
 
 import { spawn, ChildProcess } from "child_process";
 import { createHash } from "crypto";
-import { CgPolicy } from "./cg-policy";
-import { SecurityLogger } from "./security-logger";
+import { CgPolicy } from "./policy";
+import { SecurityLogger } from "./logger";
 import {
   LicenseManager,
   MCPTraceabilityManager,
   ContextTracker,
-} from "./premium-features";
+} from "../../premium-features";
 import { CgPolicyType, MCPMessage } from "./types";
 
 /**

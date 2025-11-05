@@ -11,10 +11,6 @@
     "strict": true,
     "resolveJsonModule": true
   },
-  "include": [
-    "src/**/*",
-    "../mcp-traceability-integration.ts",
-    "../premium-features.ts"
-  ],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

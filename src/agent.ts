@@ -9,11 +9,11 @@ import { spawn, ChildProcess } from "child_process";
 import { createHash } from "crypto";
 import { CgPolicy } from "./policy";
 import { SecurityLogger } from "./logger";
-import {
-  LicenseManager,
-  MCPTraceabilityManager,
-  ContextTracker,
-} from "../../premium-features";
+// import {
+//   LicenseManager,
+//   MCPTraceabilityManager,
+//   ContextTracker,
+// } from "../../premium-features";
 import { CgPolicyType, MCPMessage } from "./types";
 
 /**
@@ -31,9 +31,9 @@ export class CgAgent {
   private serverMessageBuffer: string = "";
 
   // Pro features (optional)
-  private licenseManager?: LicenseManager;
-  private traceabilityManager?: MCPTraceabilityManager;
-  private contextTracker?: ContextTracker;
+  // private licenseManager?: LicenseManager;
+  // private traceabilityManager?: MCPTraceabilityManager;
+  // private contextTracker?: ContextTracker;
   private proFeaturesEnabled: boolean = false;
 
   constructor(serverCommand: string[], policy: CgPolicyType = {}) {
@@ -485,13 +485,5 @@ export class CgAgent {
    */
   public getLogger(): SecurityLogger {
     return this.logger;
-  }
-
-  /**
-   * Get the traceability manager (pro feature)
-   * @returns MCPTraceabilityManager instance or undefined
-   */
-  public getTraceabilityManager(): MCPTraceabilityManager | undefined {
-    return this.traceabilityManager;
   }
 }

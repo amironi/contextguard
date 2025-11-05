@@ -42,7 +42,7 @@
     "start": "node dist/cli.js",
     "dev": "ts-node src/cli.ts",
     "test": "jest",
-    "lint": "eslint .",
+    "lint": "eslint . && pnpm tsc --noEmit",
     "prepublishOnly": "npm run build",
     "release": "npm publish & npm install -g contextguard"
   },

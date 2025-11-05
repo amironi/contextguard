@@ -22,7 +22,7 @@
 // Re-export everything from the new modular structure
 export { CgPolicy } from "./cg-policy";
 export { SecurityLogger } from "./security-logger";
-export { MCPSecurityWrapper } from "./wrapper";
+export { MCPSecurityWrapper } from "./cg-agent";
 export * from "./types";
 
 // Import CLI for backward compatibility

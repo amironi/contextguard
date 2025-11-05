@@ -14,15 +14,12 @@
 // Core types
 export * from "./types";
 
-// Configuration
-export { DEFAULT_CONFIG, mergeConfig, validateConfig } from "./config";
-
 // Security components
 export { CgPolicy } from "./cg-policy";
 export { SecurityLogger } from "./security-logger";
 
 // Main wrapper
-export { MCPSecurityWrapper } from "./wrapper";
+export { CgAgent } from "./cg-agent";
 
 // Premium features
 export {

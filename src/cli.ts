@@ -8,9 +8,8 @@
  */
 
 import * as fs from "fs";
-import { SecurityConfig } from "./types";
-import { validateConfig } from "./config";
-import { MCPSecurityWrapper } from "./wrapper";
+import { MCPSecurityWrapper } from "./cg-agent";
+import { CgPolicyType } from "./types";
 
 /**
  * Display help message
@@ -71,7 +70,7 @@ function parseArgs(): { serverCommand: string; configFile: string } {
  * @param configFile - Path to config file
  * @returns Security configuration
  */
-function loadConfig(configFile: string): SecurityConfig {
+function loadConfig(configFile: string): CgPolicyType {
   if (!configFile) {
     return {};
   }
@@ -83,7 +82,7 @@ function loadConfig(configFile: string): SecurityConfig {
 
   try {
     const config = JSON.parse(fs.readFileSync(configFile, "utf-8"));
-    validateConfig(config);
+    // validateConfig(config);
     return config;
   } catch (error) {
     console.error(`Error: Failed to load config file: ${error}`);

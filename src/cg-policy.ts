@@ -177,3 +177,15 @@ export class CgPolicy {
     return recentCalls.length < this.config.maxToolCallsPerMinute;
   }
 }
+
+export const DEFAULT_POLICY: Required<CgPolicyType> = {
+  maxToolCallsPerMinute: 30,
+  blockedPatterns: [],
+  allowedFilePaths: [],
+  alertThreshold: 5,
+  enablePromptInjectionDetection: true,
+  enableSensitiveDataDetection: true,
+  logPath: "mcp_security.log",
+  enableProFeatures: false,
+  licenseFilePath: ".contextguard-license",
+};

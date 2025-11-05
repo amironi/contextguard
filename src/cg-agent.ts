@@ -7,21 +7,20 @@
 
 import { spawn, ChildProcess } from "child_process";
 import { createHash } from "crypto";
-import { SecurityConfig, MCPMessage } from "./types";
 import { CgPolicy } from "./cg-policy";
 import { SecurityLogger } from "./security-logger";
-import { mergeConfig } from "./config";
 import {
   LicenseManager,
   MCPTraceabilityManager,
   ContextTracker,
 } from "./premium-features";
+import { CgPolicyType, MCPMessage } from "./types";
 
 /**
  * MCP Security Wrapper
  * Wraps MCP servers with security monitoring and optional pro features
  */
-export class MCPSecurityWrapper {
+export class CgAgent {
   private serverCommand: string[];
   private policy: CgPolicy;
   private logger: SecurityLogger;
@@ -37,17 +36,17 @@ export class MCPSecurityWrapper {
   private contextTracker?: ContextTracker;
   private proFeaturesEnabled: boolean = false;
 
-  constructor(serverCommand: string[], config: SecurityConfig = {}) {
-    const fullConfig = mergeConfig(config);
+  constructor(serverCommand: string[], policy: CgPolicyType = {}) {
+    // const fullConfig = mergeConfig(config);
 
     this.serverCommand = serverCommand;
-    this.policy = new CgPolicy(fullConfig);
-    this.logger = new SecurityLogger(fullConfig.logPath);
+    this.policy = new CgPolicy(policy);
+    this.logger = new SecurityLogger(policy.logPath);
     this.sessionId = this.generateSessionId();
 
     // Initialize pro features if enabled
-    if (fullConfig.enableProFeatures) {
-      this.initializeProFeatures(fullConfig.licenseFilePath);
+    if (policy.enableProFeatures) {
+      this.initializeProFeatures(policy.licenseFilePath);
     }
   }
 

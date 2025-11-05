@@ -8,12 +8,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient as SupabaseJsClient } from "@supabase/supabase-js";
 import { SecurityEvent } from "../types/types";
-import type {
-  Database,
-  AgentPolicy,
-  SecurityEventInsert,
-  AgentStatusInsert,
-} from "../types/database.types";
+import type { Database, AgentPolicy } from "../types/database.types";
 
 /**
  * Supabase configuration
@@ -42,8 +37,8 @@ export const createSupabaseClient = (
 ): SupabaseClient => {
   const { url, serviceKey } = config;
 
-  // Create Supabase client using the official SDK with typed database
-  const supabase = createClient<Database>(url, serviceKey, {
+  // Create Supabase client using the official SDK
+  const supabase = createClient(url, serviceKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -56,7 +51,7 @@ export const createSupabaseClient = (
      */
     reportEvent: async (event: SecurityEvent): Promise<void> => {
       try {
-        const eventData: SecurityEventInsert = {
+        const eventData = {
           agent_id: config.agentId || "unknown",
           event_type: event.eventType,
           severity: event.severity,
@@ -67,7 +62,8 @@ export const createSupabaseClient = (
 
         const { error } = await supabase
           .from("security_events")
-          .insert(eventData);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .insert(eventData as any);
 
         if (error) {
           console.error("Failed to report event to Supabase:", error);
@@ -94,7 +90,8 @@ export const createSupabaseClient = (
           return null;
         }
 
-        return (data?.policy as AgentPolicy) || null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return ((data as any)?.policy as AgentPolicy) || null;
       } catch (error) {
         console.error("Failed to fetch policy from Supabase:", error);
         return null;
@@ -109,7 +106,7 @@ export const createSupabaseClient = (
       status: string
     ): Promise<void> => {
       try {
-        const statusData: AgentStatusInsert = {
+        const statusData = {
           agent_id: agentId,
           status: status as "online" | "offline" | "error",
           last_seen: new Date().toISOString(),
@@ -117,7 +114,8 @@ export const createSupabaseClient = (
 
         const { error } = await supabase
           .from("agent_status")
-          .upsert(statusData, {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .upsert(statusData as any, {
             onConflict: "agent_id",
           });
 

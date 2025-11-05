@@ -11,6 +11,6 @@
     "strict": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*", "src/types", "src/lib"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

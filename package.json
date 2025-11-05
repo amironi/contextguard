@@ -1,21 +1,49 @@
 {
   "name": "contextguard",
-  "version": "0.1.8",
-  "description": "Security monitoring wrapper for MCP servers",
-  "main": "dist/mcp-security-wrapper.js",
-  "types": "dist/mcp-security-wrapper.d.ts",
+  "version": "0.2.0",
+  "description": "Security monitoring wrapper for MCP servers with enterprise features",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "homepage": "https://github.com/amironi/contextguard#readme",
   "author": "Amir Mironi",
   "license": "MIT",
   "bin": {
-    "contextguard": "./dist/mcp-security-wrapper.js"
+    "contextguard": "./dist/cli.js"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
+    },
+    "./wrapper": {
+      "types": "./dist/wrapper.d.ts",
+      "require": "./dist/wrapper.js",
+      "import": "./dist/wrapper.js"
+    },
+    "./premium": {
+      "types": "./dist/premium-features.d.ts",
+      "require": "./dist/premium-features.js",
+      "import": "./dist/premium-features.js"
+    },
+    "./traceability": {
+      "types": "./dist/mcp-traceability-integration.d.ts",
+      "require": "./dist/mcp-traceability-integration.js",
+      "import": "./dist/mcp-traceability-integration.js"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "ts-node src/mcp-security-wrapper.ts",
+    "start": "node dist/cli.js",
+    "dev": "ts-node src/cli.ts",
     "test": "jest",
     "lint": "eslint .",
+    "prepublishOnly": "npm run build",
     "release": "npm publish & npm install -g contextguard"
   },
   "keywords": [
@@ -23,7 +51,11 @@
     "security",
     "ai",
     "llm",
-    "claude"
+    "claude",
+    "traceability",
+    "compliance",
+    "enterprise",
+    "monitoring"
   ],
   "repository": {
     "type": "git",

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { SecurityConfig } from "./types";
+import { CgPolicyType } from "./types";
 
 /**
  * Security policy enforcement engine
@@ -15,12 +15,12 @@ import { SecurityConfig } from "./types";
  * - Unsafe file access patterns
  * - Rate limiting
  */
-export class SecurityPolicy {
-  private config: Required<SecurityConfig>;
+export class CgPolicy {
+  private config: Required<CgPolicyType>;
   private sensitiveDataPatterns: RegExp[];
   private promptInjectionPatterns: RegExp[];
 
-  constructor(config: Required<SecurityConfig>) {
+  constructor(config: Required<CgPolicyType>) {
     this.config = config;
     this.sensitiveDataPatterns = this.initSensitiveDataPatterns();
     this.promptInjectionPatterns = this.initPromptInjectionPatterns();
@@ -34,22 +34,22 @@ export class SecurityPolicy {
     return [
       // Generic secrets
       /(?:password|secret|api[_-]?key|token)\s*[:=]\s*['"]?[\w\-.]+['"]?/gi,
-      
+
       // Email addresses
       /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-      
+
       // Social Security Numbers
       /\b\d{3}-\d{2}-\d{4}\b/g,
-      
+
       // OpenAI API keys
       /sk-[a-zA-Z0-9]{20,}/g,
-      
+
       // GitHub tokens
       /ghp_[a-zA-Z0-9]{36}/g,
-      
+
       // AWS Access Keys
       /AKIA[0-9A-Z]{16}/g,
-      
+
       // Stripe API keys
       /sk_(live|test)_[a-zA-Z0-9]{24,}/g,
     ];
@@ -83,16 +83,19 @@ export class SecurityPolicy {
     }
 
     const violations: string[] = [];
-    
+
     for (const pattern of this.promptInjectionPatterns) {
       const matches = text.match(pattern);
       if (matches) {
         violations.push(
-          `Potential prompt injection detected: "${matches[0].substring(0, 50)}..."`
+          `Potential prompt injection detected: "${matches[0].substring(
+            0,
+            50
+          )}..."`
         );
       }
     }
-    
+
     return violations;
   }
 
@@ -107,16 +110,19 @@ export class SecurityPolicy {
     }
 
     const violations: string[] = [];
-    
+
     for (const pattern of this.sensitiveDataPatterns) {
       const matches = text.match(pattern);
       if (matches) {
         violations.push(
-          `Sensitive data pattern detected (redacted): ${pattern.source.substring(0, 30)}...`
+          `Sensitive data pattern detected (redacted): ${pattern.source.substring(
+            0,
+            30
+          )}...`
         );
       }
     }
-    
+
     return violations;
   }
 
@@ -141,7 +147,7 @@ export class SecurityPolicy {
       "/proc",
       "C:\\Windows\\System32",
     ];
-    
+
     if (dangerousPaths.some((dangerous) => filePath.startsWith(dangerous))) {
       violations.push(`Access to dangerous path detected: ${filePath}`);
     }
@@ -151,7 +157,7 @@ export class SecurityPolicy {
       const isAllowed = this.config.allowedFilePaths.some((allowed) =>
         filePath.startsWith(allowed)
       );
-      
+
       if (!isAllowed) {
         violations.push(`File path not in allowed list: ${filePath}`);
       }

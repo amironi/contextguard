@@ -8,7 +8,7 @@
 import { spawn, ChildProcess } from "child_process";
 import { createHash } from "crypto";
 import { SecurityConfig, MCPMessage } from "./types";
-import { SecurityPolicy } from "./security-policy";
+import { CgPolicy } from "./cg-policy";
 import { SecurityLogger } from "./security-logger";
 import { mergeConfig } from "./config";
 import {
@@ -23,7 +23,7 @@ import {
  */
 export class MCPSecurityWrapper {
   private serverCommand: string[];
-  private policy: SecurityPolicy;
+  private policy: CgPolicy;
   private logger: SecurityLogger;
   private process: ChildProcess | null = null;
   private toolCallTimestamps: number[] = [];
@@ -37,14 +37,11 @@ export class MCPSecurityWrapper {
   private contextTracker?: ContextTracker;
   private proFeaturesEnabled: boolean = false;
 
-  constructor(
-    serverCommand: string[],
-    config: SecurityConfig = {}
-  ) {
+  constructor(serverCommand: string[], config: SecurityConfig = {}) {
     const fullConfig = mergeConfig(config);
-    
+
     this.serverCommand = serverCommand;
-    this.policy = new SecurityPolicy(fullConfig);
+    this.policy = new CgPolicy(fullConfig);
     this.logger = new SecurityLogger(fullConfig.logPath);
     this.sessionId = this.generateSessionId();
 
@@ -72,13 +69,17 @@ export class MCPSecurityWrapper {
   private initializeProFeatures(licenseFilePath: string): void {
     try {
       this.licenseManager = new LicenseManager(licenseFilePath);
-      
+
       if (this.licenseManager.validateLicense()) {
         this.proFeaturesEnabled = true;
-        this.traceabilityManager = new MCPTraceabilityManager(this.licenseManager);
+        this.traceabilityManager = new MCPTraceabilityManager(
+          this.licenseManager
+        );
         this.contextTracker = new ContextTracker(this.licenseManager);
-        
-        console.log(`✓ Pro features enabled (${this.licenseManager.getTier()} tier)`);
+
+        console.log(
+          `✓ Pro features enabled (${this.licenseManager.getTier()} tier)`
+        );
       } else {
         console.warn("⚠ Invalid or expired license. Pro features disabled.");
       }
@@ -165,7 +166,7 @@ export class MCPSecurityWrapper {
   private processClientMessage(line: string): void {
     try {
       const message: MCPMessage = JSON.parse(line);
-      
+
       this.logger.logEvent(
         "CLIENT_REQUEST",
         "LOW",
@@ -200,7 +201,7 @@ export class MCPSecurityWrapper {
       }
     } catch (err) {
       this.handleParseError(err, line);
-      
+
       // Forward unparseable messages
       if (this.process && this.process.stdin) {
         this.process.stdin.write(line + "\n");
@@ -233,7 +234,7 @@ export class MCPSecurityWrapper {
     if (!this.policy.checkRateLimit(this.toolCallTimestamps)) {
       violations.push("Rate limit exceeded for tool calls");
       shouldBlock = true;
-      
+
       this.logger.logEvent(
         "RATE_LIMIT_EXCEEDED",
         "HIGH",
@@ -254,14 +255,10 @@ export class MCPSecurityWrapper {
     const filePathParams = this.extractFilePaths(message);
     for (const filePath of filePathParams) {
       violations.push(...this.policy.checkFileAccess(filePath));
-      
+
       // Track file access in pro features
       if (this.contextTracker) {
-        this.contextTracker.recordFileAccess(
-          this.sessionId,
-          filePath,
-          "read"
-        );
+        this.contextTracker.recordFileAccess(this.sessionId, filePath, "read");
       }
     }
 
@@ -324,7 +321,7 @@ export class MCPSecurityWrapper {
 
     if (shouldBlock) {
       console.error("🚫 REQUEST BLOCKED\n");
-      
+
       // Send error response
       if (message.id !== undefined) {
         const errorResponse: MCPMessage = {

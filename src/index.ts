@@ -7,7 +7,7 @@
 
 /**
  * ContextGuard - Security monitoring wrapper for MCP servers
- * 
+ *
  * @packageDocumentation
  */
 
@@ -18,7 +18,7 @@ export * from "./types";
 export { DEFAULT_CONFIG, mergeConfig, validateConfig } from "./config";
 
 // Security components
-export { SecurityPolicy } from "./security-policy";
+export { CgPolicy } from "./cg-policy";
 export { SecurityLogger } from "./security-logger";
 
 // Main wrapper

@@ -5,10 +5,10 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * 
+ *
  * @deprecated This file is maintained for backward compatibility.
  * Please use the new modular structure from './index' instead.
- * 
+ *
  * The code has been refactored into separate modules for better maintainability:
  * - types.ts: Type definitions
  * - config.ts: Configuration management
@@ -20,7 +20,7 @@
  */
 
 // Re-export everything from the new modular structure
-export { SecurityPolicy } from "./security-policy";
+export { CgPolicy } from "./cg-policy";
 export { SecurityLogger } from "./security-logger";
 export { MCPSecurityWrapper } from "./wrapper";
 export * from "./types";

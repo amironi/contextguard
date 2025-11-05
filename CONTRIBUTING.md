@@ -247,7 +247,7 @@ perf: optimize regex matching for large payloads
 test: add tests for rate limiting
 
 # Refactoring
-refactor: simplify SecurityPolicy class
+refactor: simplify CgPolicy class
 ```
 
 ### Pull Request Process
@@ -340,7 +340,7 @@ const sqlInjectionPatterns = [
 Edit `src/mcp-security-wrapper.ts`:
 
 ```typescript
-class SecurityPolicy {
+class CgPolicy {
   private sqlInjectionPatterns: RegExp[];
 
   constructor(config: SecurityConfig) {
@@ -374,13 +374,13 @@ class SecurityPolicy {
 Create `tests/sql-injection.test.ts`:
 
 ```typescript
-import { SecurityPolicy } from "../src/mcp-security-wrapper";
+import { CgPolicy } from "../src/mcp-security-wrapper";
 
 describe("SQL Injection Detection", () => {
-  let policy: SecurityPolicy;
+  let policy: CgPolicy;
 
   beforeEach(() => {
-    policy = new SecurityPolicy({});
+    policy = new CgPolicy({});
   });
 
   it("should detect DROP TABLE injection", () => {

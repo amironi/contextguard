@@ -40,14 +40,14 @@ export class CgAgent {
     // const fullConfig = mergeConfig(config);
 
     this.serverCommand = serverCommand;
-    this.policy = new CgPolicy(policy);
+    this.policy = new CgPolicy(policy as Required<CgPolicyType>);
     this.logger = new SecurityLogger(policy.logPath);
     this.sessionId = this.generateSessionId();
 
-    // Initialize pro features if enabled
-    if (policy.enableProFeatures) {
-      this.initializeProFeatures(policy.licenseFilePath);
-    }
+    // // Initialize pro features if enabled
+    // if (policy.enableProFeatures) {
+    //   this.initializeProFeatures(policy.licenseFilePath);
+    // }
   }
 
   /**
@@ -65,27 +65,27 @@ export class CgAgent {
    * Initialize pro features if license is valid
    * @param licenseFilePath - Path to license file
    */
-  private initializeProFeatures(licenseFilePath: string): void {
-    try {
-      this.licenseManager = new LicenseManager(licenseFilePath);
+  // private initializeProFeatures(licenseFilePath: string): void {
+  //   try {
+  //     // this.licenseManager = new LicenseManager(licenseFilePath);
 
-      if (this.licenseManager.validateLicense()) {
-        this.proFeaturesEnabled = true;
-        this.traceabilityManager = new MCPTraceabilityManager(
-          this.licenseManager
-        );
-        this.contextTracker = new ContextTracker(this.licenseManager);
+  //     if (this.licenseManager.validateLicense()) {
+  //       // this.proFeaturesEnabled = true;
+  //       // this.traceabilityManager = new MCPTraceabilityManager(
+  //       //   this.licenseManager
+  //       // );
+  //       // this.contextTracker = new ContextTracker(this.licenseManager);
 
-        console.log(
-          `✓ Pro features enabled (${this.licenseManager.getTier()} tier)`
-        );
-      } else {
-        console.warn("⚠ Invalid or expired license. Pro features disabled.");
-      }
-    } catch (error) {
-      console.warn("⚠ Failed to initialize pro features:", error);
-    }
-  }
+  //       console.log(
+  //         `✓ Pro features enabled (${this.licenseManager.getTier()} tier)`
+  //       );
+  //     } else {
+  //       console.warn("⚠ Invalid or expired license. Pro features disabled.");
+  //     }
+  //   } catch (error) {
+  //     console.warn("⚠ Failed to initialize pro features:", error);
+  //   }
+  // }
 
   /**
    * Start the MCP server wrapper
@@ -255,10 +255,10 @@ export class CgAgent {
     for (const filePath of filePathParams) {
       violations.push(...this.policy.checkFileAccess(filePath));
 
-      // Track file access in pro features
-      if (this.contextTracker) {
-        this.contextTracker.recordFileAccess(this.sessionId, filePath, "read");
-      }
+      // // Track file access in pro features
+      // if (this.contextTracker) {
+      //   this.contextTracker.recordFileAccess(this.sessionId, filePath, "read");
+      // }
     }
 
     // Log tool call

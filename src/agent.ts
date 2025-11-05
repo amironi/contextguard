@@ -7,282 +7,74 @@
 
 import { spawn, ChildProcess } from "child_process";
 import { createHash } from "crypto";
-import { CgPolicy } from "./policy";
-import { SecurityLogger } from "./logger";
-// import {
-//   LicenseManager,
-//   MCPTraceabilityManager,
-//   ContextTracker,
-// } from "../../premium-features";
+import { createPolicyChecker, DEFAULT_POLICY } from "./policy";
+import { createLogger, Logger } from "./logger";
 import { CgPolicyType, MCPMessage } from "./types";
 
 /**
- * MCP Security Wrapper
- * Wraps MCP servers with security monitoring and optional pro features
+ * Generate a unique session ID
  */
-export class CgAgent {
-  private serverCommand: string[];
-  private policy: CgPolicy;
-  private logger: SecurityLogger;
-  private process: ChildProcess | null = null;
-  private toolCallTimestamps: number[] = [];
-  private sessionId: string;
-  private clientMessageBuffer: string = "";
-  private serverMessageBuffer: string = "";
+const generateSessionId = (): string =>
+  createHash("md5")
+    .update(Date.now().toString())
+    .digest("hex")
+    .substring(0, 8);
 
-  // Pro features (optional)
-  // private licenseManager?: LicenseManager;
-  // private traceabilityManager?: MCPTraceabilityManager;
-  // private contextTracker?: ContextTracker;
-  private proFeaturesEnabled: boolean = false;
+/**
+ * Merge policy with defaults
+ */
+const mergePolicyWithDefaults = (
+  policy: CgPolicyType
+): Required<CgPolicyType> => ({
+  ...DEFAULT_POLICY,
+  ...policy,
+});
 
-  constructor(serverCommand: string[], policy: CgPolicyType = {}) {
-    // const fullConfig = mergeConfig(config);
+/**
+ * Agent interface
+ */
+export interface Agent {
+  start: () => Promise<void>;
+  getLogger: () => Logger;
+}
 
-    this.serverCommand = serverCommand;
-    this.policy = new CgPolicy(policy as Required<CgPolicyType>);
-    this.logger = new SecurityLogger(policy.logPath);
-    this.sessionId = this.generateSessionId();
+/**
+ * Agent state
+ */
+interface AgentState {
+  process: ChildProcess | null;
+  toolCallTimestamps: number[];
+  clientMessageBuffer: string;
+  serverMessageBuffer: string;
+}
 
-    // // Initialize pro features if enabled
-    // if (policy.enableProFeatures) {
-    //   this.initializeProFeatures(policy.licenseFilePath);
-    // }
-  }
+/**
+ * Create an MCP security agent
+ * @param serverCommand - Command to start MCP server
+ * @param policyConfig - Policy configuration
+ * @returns Agent functions
+ */
+export const createAgent = (
+  serverCommand: string[],
+  policyConfig: CgPolicyType = {}
+): Agent => {
+  const config = mergePolicyWithDefaults(policyConfig);
+  const policy = createPolicyChecker(config);
+  const logger = createLogger(config.logPath);
+  const sessionId = generateSessionId();
 
-  /**
-   * Generate a unique session ID
-   * @returns 8-character hex session ID
-   */
-  private generateSessionId(): string {
-    return createHash("md5")
-      .update(Date.now().toString())
-      .digest("hex")
-      .substring(0, 8);
-  }
-
-  /**
-   * Initialize pro features if license is valid
-   * @param licenseFilePath - Path to license file
-   */
-  // private initializeProFeatures(licenseFilePath: string): void {
-  //   try {
-  //     // this.licenseManager = new LicenseManager(licenseFilePath);
-
-  //     if (this.licenseManager.validateLicense()) {
-  //       // this.proFeaturesEnabled = true;
-  //       // this.traceabilityManager = new MCPTraceabilityManager(
-  //       //   this.licenseManager
-  //       // );
-  //       // this.contextTracker = new ContextTracker(this.licenseManager);
-
-  //       console.log(
-  //         `✓ Pro features enabled (${this.licenseManager.getTier()} tier)`
-  //       );
-  //     } else {
-  //       console.warn("⚠ Invalid or expired license. Pro features disabled.");
-  //     }
-  //   } catch (error) {
-  //     console.warn("⚠ Failed to initialize pro features:", error);
-  //   }
-  // }
-
-  /**
-   * Start the MCP server wrapper
-   */
-  public async start(): Promise<void> {
-    this.process = spawn(this.serverCommand[0], this.serverCommand.slice(1), {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-
-    if (!this.process.stdout || !this.process.stdin || !this.process.stderr) {
-      throw new Error("Failed to create child process streams");
-    }
-
-    this.logger.logEvent(
-      "SERVER_START",
-      "LOW",
-      {
-        command: this.serverCommand.join(" "),
-        pid: this.process.pid,
-        proFeaturesEnabled: this.proFeaturesEnabled,
-      },
-      this.sessionId
-    );
-
-    // Pipe stderr to parent process
-    this.process.stderr.pipe(process.stderr);
-
-    // Handle server output
-    this.process.stdout.on("data", (data: Buffer) => {
-      const output = data.toString();
-      this.handleServerOutput(output);
-    });
-
-    // Handle client input
-    process.stdin.on("data", (data: Buffer) => {
-      const input = data.toString();
-      this.handleClientInput(input);
-    });
-
-    // Handle process exit
-    this.process.on("exit", (code) => {
-      this.handleProcessExit(code);
-    });
-
-    // Handle process errors
-    this.process.on("error", (err) => {
-      this.logger.logEvent(
-        "SERVER_ERROR",
-        "HIGH",
-        { error: err.message },
-        this.sessionId
-      );
-      console.error("Server process error:", err);
-    });
-  }
-
-  /**
-   * Handle client input (buffered line-by-line)
-   * @param input - Raw input from client
-   */
-  private handleClientInput(input: string): void {
-    this.clientMessageBuffer += input;
-    const lines = this.clientMessageBuffer.split("\n");
-    this.clientMessageBuffer = lines.pop() || "";
-
-    for (const line of lines) {
-      if (line.trim()) {
-        this.processClientMessage(line);
-      }
-    }
-  }
-
-  /**
-   * Process a single client message
-   * @param line - JSON-RPC message line
-   */
-  private processClientMessage(line: string): void {
-    try {
-      const message: MCPMessage = JSON.parse(line);
-
-      this.logger.logEvent(
-        "CLIENT_REQUEST",
-        "LOW",
-        {
-          method: message.method,
-          id: message.id,
-        },
-        this.sessionId
-      );
-
-      const violations: string[] = [];
-      let shouldBlock = false;
-
-      // Handle tool calls with security checks
-      if (message.method === "tools/call") {
-        const result = this.handleToolCall(message);
-        violations.push(...result.violations);
-        shouldBlock = result.shouldBlock;
-      }
-
-      // Handle violations
-      if (violations.length > 0) {
-        this.handleViolations(message, violations, shouldBlock);
-        if (shouldBlock) {
-          return; // Don't forward blocked requests
-        }
-      }
-
-      // Forward to server
-      if (this.process && this.process.stdin) {
-        this.process.stdin.write(line + "\n");
-      }
-    } catch (err) {
-      this.handleParseError(err, line);
-
-      // Forward unparseable messages
-      if (this.process && this.process.stdin) {
-        this.process.stdin.write(line + "\n");
-      }
-    }
-  }
-
-  /**
-   * Handle tool call with security checks and traceability
-   * @param message - MCP message
-   * @returns Violations and block status
-   */
-  private handleToolCall(message: MCPMessage): {
-    violations: string[];
-    shouldBlock: boolean;
-  } {
-    const violations: string[] = [];
-    let shouldBlock = false;
-
-    // Rate limiting
-    const now = Date.now();
-    this.toolCallTimestamps.push(now);
-
-    // Clean up old timestamps
-    const oneMinuteAgo = now - 60000;
-    this.toolCallTimestamps = this.toolCallTimestamps.filter(
-      (t) => t > oneMinuteAgo
-    );
-
-    if (!this.policy.checkRateLimit(this.toolCallTimestamps)) {
-      violations.push("Rate limit exceeded for tool calls");
-      shouldBlock = true;
-
-      this.logger.logEvent(
-        "RATE_LIMIT_EXCEEDED",
-        "HIGH",
-        {
-          method: message.method,
-          toolName: message.params?.name,
-        },
-        this.sessionId
-      );
-    }
-
-    // Check parameters for security issues
-    const paramsStr = JSON.stringify(message.params);
-    violations.push(...this.policy.checkPromptInjection(paramsStr));
-    violations.push(...this.policy.checkSensitiveData(paramsStr));
-
-    // Check file paths
-    const filePathParams = this.extractFilePaths(message);
-    for (const filePath of filePathParams) {
-      violations.push(...this.policy.checkFileAccess(filePath));
-
-      // // Track file access in pro features
-      // if (this.contextTracker) {
-      //   this.contextTracker.recordFileAccess(this.sessionId, filePath, "read");
-      // }
-    }
-
-    // Log tool call
-    this.logger.logEvent(
-      "TOOL_CALL",
-      violations.length > 0 ? "HIGH" : "LOW",
-      {
-        toolName: message.params?.name,
-        hasViolations: violations.length > 0,
-        violations,
-      },
-      this.sessionId
-    );
-
-    return { violations, shouldBlock };
-  }
+  const state: AgentState = {
+    process: null,
+    toolCallTimestamps: [],
+    clientMessageBuffer: "",
+    serverMessageBuffer: "",
+  };
 
   /**
    * Extract file paths from message parameters
-   * @param message - MCP message
-   * @returns Array of file paths
    */
-  private extractFilePaths(message: MCPMessage): string[] {
-    return [
+  const extractFilePaths = (message: MCPMessage): string[] =>
+    [
       message.params?.arguments?.path,
       message.params?.arguments?.filePath,
       message.params?.arguments?.file,
@@ -290,28 +82,84 @@ export class CgAgent {
       message.params?.path,
       message.params?.filePath,
     ].filter((path): path is string => typeof path === "string");
-  }
+
+  /**
+   * Handle tool call with security checks
+   */
+  const handleToolCall = (
+    message: MCPMessage
+  ): { violations: string[]; shouldBlock: boolean } => {
+    const violations: string[] = [];
+    let shouldBlock = false;
+
+    // Rate limiting
+    const now = Date.now();
+    state.toolCallTimestamps.push(now);
+
+    // Clean up old timestamps
+    const oneMinuteAgo = now - 60000;
+    state.toolCallTimestamps = state.toolCallTimestamps.filter(
+      (t) => t > oneMinuteAgo
+    );
+
+    if (!policy.checkRateLimit(state.toolCallTimestamps)) {
+      violations.push("Rate limit exceeded for tool calls");
+      shouldBlock = true;
+
+      logger.logEvent(
+        "RATE_LIMIT_EXCEEDED",
+        "HIGH",
+        {
+          method: message.method,
+          toolName: message.params?.name,
+        },
+        sessionId
+      );
+    }
+
+    // Check parameters for security issues
+    const paramsStr = JSON.stringify(message.params);
+    violations.push(...policy.checkPromptInjection(paramsStr));
+    violations.push(...policy.checkSensitiveData(paramsStr));
+
+    // Check file paths
+    const filePathParams = extractFilePaths(message);
+    for (const filePath of filePathParams) {
+      violations.push(...policy.checkFileAccess(filePath));
+    }
+
+    // Log tool call
+    logger.logEvent(
+      "TOOL_CALL",
+      violations.length > 0 ? "HIGH" : "LOW",
+      {
+        toolName: message.params?.name,
+        hasViolations: violations.length > 0,
+        violations,
+      },
+      sessionId
+    );
+
+    return { violations, shouldBlock };
+  };
 
   /**
    * Handle security violations
-   * @param message - Original message
-   * @param violations - List of violations
-   * @param shouldBlock - Whether to block the request
    */
-  private handleViolations(
+  const handleViolations = (
     message: MCPMessage,
     violations: string[],
     shouldBlock: boolean
-  ): void {
-    this.logger.logEvent(
+  ): void => {
+    logger.logEvent(
       "SECURITY_VIOLATION",
       "CRITICAL",
       {
         violations,
-        message: message,
+        message,
         blocked: shouldBlock,
       },
-      this.sessionId
+      sessionId
     );
 
     console.error(
@@ -335,107 +183,39 @@ export class CgAgent {
         process.stdout.write(JSON.stringify(errorResponse) + "\n");
       }
     }
-  }
+  };
 
   /**
    * Handle parse errors
-   * @param err - Error object
-   * @param line - Original line that failed to parse
    */
-  private handleParseError(err: unknown, line: string): void {
-    this.logger.logEvent(
+  const handleParseError = (err: unknown, line: string): void => {
+    logger.logEvent(
       "PARSE_ERROR",
       "MEDIUM",
       {
         error: err instanceof Error ? err.message : String(err),
         line: line.substring(0, 100),
       },
-      this.sessionId
+      sessionId
     );
     console.error(`Failed to parse client message: ${err}`);
-  }
-
-  /**
-   * Handle server output (buffered line-by-line)
-   * @param output - Raw output from server
-   */
-  private handleServerOutput(output: string): void {
-    this.serverMessageBuffer += output;
-    const lines = this.serverMessageBuffer.split("\n");
-    this.serverMessageBuffer = lines.pop() || "";
-
-    for (const line of lines) {
-      if (line.trim()) {
-        this.processServerMessage(line);
-      }
-    }
-  }
-
-  /**
-   * Process a single server message
-   * @param line - JSON-RPC message line
-   */
-  private processServerMessage(line: string): void {
-    let shouldForward = true;
-
-    try {
-      const message: MCPMessage = JSON.parse(line);
-
-      // Check for sensitive data in response
-      const violations: string[] = [];
-      const responseStr = JSON.stringify(message.result || message);
-      violations.push(...this.policy.checkSensitiveData(responseStr));
-
-      if (violations.length > 0) {
-        this.handleSensitiveDataLeak(message, violations);
-        shouldForward = false;
-      } else {
-        this.logger.logEvent(
-          "SERVER_RESPONSE",
-          "LOW",
-          {
-            id: message.id,
-            hasError: !!message.error,
-          },
-          this.sessionId
-        );
-      }
-    } catch (err) {
-      // Log parse errors for server output
-      this.logger.logEvent(
-        "SERVER_PARSE_ERROR",
-        "LOW",
-        {
-          error: err instanceof Error ? err.message : String(err),
-          line: line.substring(0, 100),
-        },
-        this.sessionId
-      );
-    }
-
-    // Forward the line if not blocked
-    if (shouldForward) {
-      process.stdout.write(line + "\n");
-    }
-  }
+  };
 
   /**
    * Handle sensitive data leak in server response
-   * @param message - Server message
-   * @param violations - List of violations
    */
-  private handleSensitiveDataLeak(
+  const handleSensitiveDataLeak = (
     message: MCPMessage,
     violations: string[]
-  ): void {
-    this.logger.logEvent(
+  ): void => {
+    logger.logEvent(
       "SENSITIVE_DATA_LEAK",
       "CRITICAL",
       {
         violations,
         responseId: message.id,
       },
-      this.sessionId
+      sessionId
     );
 
     console.error(
@@ -456,34 +236,214 @@ export class CgAgent {
       };
       process.stdout.write(JSON.stringify(errorResponse) + "\n");
     }
-  }
+  };
+
+  /**
+   * Process a single client message
+   */
+  const processClientMessage = (line: string): void => {
+    try {
+      const message: MCPMessage = JSON.parse(line);
+
+      logger.logEvent(
+        "CLIENT_REQUEST",
+        "LOW",
+        {
+          method: message.method,
+          id: message.id,
+        },
+        sessionId
+      );
+
+      const violations: string[] = [];
+      let shouldBlock = false;
+
+      // Handle tool calls with security checks
+      if (message.method === "tools/call") {
+        const result = handleToolCall(message);
+        violations.push(...result.violations);
+        shouldBlock = result.shouldBlock;
+      }
+
+      // Handle violations
+      if (violations.length > 0) {
+        handleViolations(message, violations, shouldBlock);
+        if (shouldBlock) {
+          return; // Don't forward blocked requests
+        }
+      }
+
+      // Forward to server
+      if (state.process?.stdin) {
+        state.process.stdin.write(line + "\n");
+      }
+    } catch (err) {
+      handleParseError(err, line);
+
+      // Forward unparseable messages
+      if (state.process?.stdin) {
+        state.process.stdin.write(line + "\n");
+      }
+    }
+  };
+
+  /**
+   * Handle client input (buffered line-by-line)
+   */
+  const handleClientInput = (input: string): void => {
+    state.clientMessageBuffer += input;
+    const lines = state.clientMessageBuffer.split("\n");
+    state.clientMessageBuffer = lines.pop() || "";
+
+    for (const line of lines) {
+      if (line.trim()) {
+        processClientMessage(line);
+      }
+    }
+  };
+
+  /**
+   * Process a single server message
+   */
+  const processServerMessage = (line: string): void => {
+    let shouldForward = true;
+
+    try {
+      const message: MCPMessage = JSON.parse(line);
+
+      // Check for sensitive data in response
+      const violations: string[] = [];
+      const responseStr = JSON.stringify(message.result || message);
+      violations.push(...policy.checkSensitiveData(responseStr));
+
+      if (violations.length > 0) {
+        handleSensitiveDataLeak(message, violations);
+        shouldForward = false;
+      } else {
+        logger.logEvent(
+          "SERVER_RESPONSE",
+          "LOW",
+          {
+            id: message.id,
+            hasError: !!message.error,
+          },
+          sessionId
+        );
+      }
+    } catch (err) {
+      // Log parse errors for server output
+      logger.logEvent(
+        "SERVER_PARSE_ERROR",
+        "LOW",
+        {
+          error: err instanceof Error ? err.message : String(err),
+          line: line.substring(0, 100),
+        },
+        sessionId
+      );
+    }
+
+    // Forward the line if not blocked
+    if (shouldForward) {
+      process.stdout.write(line + "\n");
+    }
+  };
+
+  /**
+   * Handle server output (buffered line-by-line)
+   */
+  const handleServerOutput = (output: string): void => {
+    state.serverMessageBuffer += output;
+    const lines = state.serverMessageBuffer.split("\n");
+    state.serverMessageBuffer = lines.pop() || "";
+
+    for (const line of lines) {
+      if (line.trim()) {
+        processServerMessage(line);
+      }
+    }
+  };
 
   /**
    * Handle process exit
-   * @param code - Exit code
    */
-  private handleProcessExit(code: number | null): void {
-    this.logger.logEvent(
+  const handleProcessExit = (code: number | null): void => {
+    logger.logEvent(
       "SERVER_EXIT",
       "MEDIUM",
       { exitCode: code },
-      this.sessionId
+      sessionId
     );
 
     console.error("\n=== MCP Security Statistics ===");
-    console.error(JSON.stringify(this.logger.getStatistics(), null, 2));
+    console.error(JSON.stringify(logger.getStatistics(), null, 2));
 
     // Use setImmediate to allow pending I/O to complete
     setImmediate(() => {
       process.exit(code || 0);
     });
-  }
+  };
 
-  /**
-   * Get the security logger instance
-   * @returns SecurityLogger instance
-   */
-  public getLogger(): SecurityLogger {
-    return this.logger;
-  }
-}
+  return {
+    /**
+     * Start the MCP server wrapper
+     */
+    start: async (): Promise<void> => {
+      state.process = spawn(serverCommand[0], serverCommand.slice(1), {
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+
+      if (
+        !state.process.stdout ||
+        !state.process.stdin ||
+        !state.process.stderr
+      ) {
+        throw new Error("Failed to create child process streams");
+      }
+
+      logger.logEvent(
+        "SERVER_START",
+        "LOW",
+        {
+          command: serverCommand.join(" "),
+          pid: state.process.pid,
+        },
+        sessionId
+      );
+
+      // Pipe stderr to parent process
+      state.process.stderr.pipe(process.stderr);
+
+      // Handle server output
+      state.process.stdout.on("data", (data: Buffer) => {
+        handleServerOutput(data.toString());
+      });
+
+      // Handle client input
+      process.stdin.on("data", (data: Buffer) => {
+        handleClientInput(data.toString());
+      });
+
+      // Handle process exit
+      state.process.on("exit", (code) => {
+        handleProcessExit(code);
+      });
+
+      // Handle process errors
+      state.process.on("error", (err) => {
+        logger.logEvent(
+          "SERVER_ERROR",
+          "HIGH",
+          { error: err.message },
+          sessionId
+        );
+        console.error("Server process error:", err);
+      });
+    },
+
+    /**
+     * Get the security logger instance
+     */
+    getLogger: (): Logger => logger,
+  };
+};

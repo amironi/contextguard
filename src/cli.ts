@@ -9,7 +9,7 @@
 
 import * as fs from "fs";
 import { CgPolicyType } from "./types";
-import { CgAgent } from "./agent";
+import { createAgent } from "./agent";
 
 /**
  * Display help message
@@ -93,7 +93,7 @@ function loadConfig(configFile: string): CgPolicyType {
 /**
  * Main CLI entry point
  */
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
   // Show help if requested or no args
@@ -114,10 +114,10 @@ async function main(): Promise<void> {
   // Load configuration
   const config = loadConfig(configFile);
 
-  // Create and start wrapper
-  const wrapper = new CgAgent(serverCommand.split(" "), config);
+  // Create and start agent
+  const agent = createAgent(serverCommand.split(" "), config);
 
-  await wrapper.start();
+  await agent.start();
 }
 
 // Run CLI if this is the main module
@@ -127,5 +127,3 @@ if (require.main === module) {
     process.exit(1);
   });
 }
-
-export { main };
